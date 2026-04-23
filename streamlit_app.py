@@ -1,9 +1,7 @@
 import json
-
 import requests
 import streamlit as st
 import streamlit.components.v1 as components
-
 from utils.pdf_generator import generate_pdf
 
 API_URL = "http://127.0.0.1:8000/apply-loan"
@@ -119,7 +117,12 @@ if not st.session_state.is_logged_in:
                 st.session_state.logged_in_email = login_email.strip()
                 st.rerun()
     st.stop()
+st.subheader("Employment Type")
 
+employment_type = st.selectbox(
+    "Select Employment Type",
+    ["salaried", "student", "business"],
+)
 with st.form("loan_form"):
     st.subheader("Applicant Profile")
     col1, col2, col3 = st.columns(3)
@@ -143,27 +146,51 @@ with st.form("loan_form"):
         existing_emi = st.number_input("Existing EMI (INR)", min_value=0.0, value=7000.0, step=500.0)
 
     st.subheader("Employment and Security")
-    col4, col5, col6 = st.columns(3)
+
+    col4, col5 = st.columns(2)
+
     with col4:
-        employment_type = st.selectbox(
-            "Employment Type",
-            ["salaried", "self-employed", "business", "freelancer", "student"],
-            index=0,
-        )
-        employer_name = st.text_input("Employer / Business Name", value="Acme Tech")
-        work_experience_years = st.number_input("Work Experience", min_value=0.0, max_value=50.0, value=4.0, step=0.5)
+        employer_name = st.text_input("Employer / Business Name")
+        work_experience_years = st.number_input("Work Experience", 0.0, 50.0, 2.0)
+
     with col5:
-        collateral_type = st.selectbox("Collateral Type", ["none", "property", "vehicle", "fixed deposit", "gold"], index=1)
-        collateral_value = st.number_input("Collateral Value (INR)", min_value=0.0, value=1200000.0, step=10000.0)
-        loan_purpose = st.text_input("Loan Purpose", value="home renovation")
-    with col6:
-        has_pan = st.checkbox("PAN Available", value=True)
-        has_aadhaar = st.checkbox("Aadhaar Available", value=True)
-        consent_to_verify_contacts = st.checkbox("Use contact verification APIs", value=True)
-        consent_to_fetch_financial_signals = st.checkbox("Use macro financial APIs", value=True)
+        collateral_type = st.selectbox(
+            "Collateral Type",
+            ["none", "property", "vehicle", "fixed deposit", "gold"],
+        )
+        collateral_value = st.number_input("Collateral Value", 0.0)
+        loan_purpose = st.text_input("Loan Purpose")
+    # ---------- Business Details (clean layout) ----------
+            # -------- Business Section --------
+    business_vintage = 0
+    annual_turnover = 0
+    annual_profit = 0
+    existing_business_loans = 0
+    business_collateral_value = 0
 
+    if employment_type == "business":
+        st.markdown("---")
+        st.markdown("### 🏢 Business Information")
+
+        b1, b2, b3 = st.columns(3)
+
+        with b1:
+            business_vintage = st.number_input("Years in Business", 0, 50, 3)
+
+        with b2:
+            annual_turnover = st.number_input("Annual Turnover", 0.0)
+
+        with b3:
+            annual_profit = st.number_input("Annual Profit", 0.0)
+
+        b4, b5 = st.columns(2)
+
+        with b4:
+            existing_business_loans = st.number_input("Existing Business Loans", 0.0)
+
+        with b5:
+            business_collateral_value = st.number_input("Business Collateral Value", 0.0)
     submitted = st.form_submit_button("Evaluate Application")
-
 if submitted:
     payload = {
         "name": name,
